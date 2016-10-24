@@ -17,7 +17,7 @@ public class a_linear_equation {
 			String s ="0"+species.substring(1);
 			return s;
 		}else{
-			String s ="0"+species.substring(1);
+			String s ="1"+species.substring(1);
 			return s;
 		}
 	}
@@ -45,7 +45,7 @@ public class a_linear_equation {
 		double[] fittness_times_number,
 		int n
 	){
-		species[0] = "110";
+		species[0] = "011";
 		species[1] = "101";
 		species[2] = "111";
 		number[0] = 33;
@@ -80,10 +80,12 @@ public class a_linear_equation {
 		//初期設定
 		initialize(species,number,error, fittness,fittness_times_number,n);
 
-
+		//出力用記述
+		System.out.println("\t種\t個体数");
 
 		int times = 0;
 		loop:while(times<m){
+
 			//誤差の二乗の計算と最大値の算出
 			double max = error(Integer.parseInt(species[0],2));
 			for(int i = 0;i<n;i++){
@@ -116,30 +118,40 @@ public class a_linear_equation {
 				}
 			}
 
+
+			//交叉と突然変異に関して、新ルール適用
+			//次世代の種の個体の多い順に上から2種が、交叉する
+			//突然変異種は親世代に存在していた種のうちからランダムで選ばれる
+			String mutant = null;
+			String child  = null;
+
+
 			//交叉と突然変異
 			//最初の種が突然変異する(過去に生じたものへは、遺伝的に記憶されているとして、突然変異しないものとする)
 			//最初の種と二番目の種が交配する。二個目の前2個と1個目の後ろ1個が交配する。
-			boolean step1 = false;
-			boolean step2 = false;
+//			boolean step1 = false;
+//			boolean step2 = false;
 			boolean step3 = false;
 			boolean step4 = false;
-			String mutant = null;
-			String child  = null;
-			for(int i = 0;i<n;i++){
-				if(number[i]>0){
-					if(step2 != true){
-						if(step1==true){
-							step2 = true;
-							child = species[i].substring(0, 2)+species[i-1].substring(2);
-							//System.out.println(child);
-						}else{
-							step1 = true;
-							mutant = set_mutant(species[i]);
-							//System.out.println(mutant);
-						}
-					}
-				}
-			}
+//			String mutant = null;
+//			String child  = null;
+//			for(int i = 0;i<n;i++){
+//				if(number[i]>0){
+//					if(step2 != true){
+//						if(step1==true){
+//							step2 = true;
+//							child = species[i].substring(0, 2)+species[i-1].substring(2);
+//							//System.out.println(child);
+//						}else{
+//							step1 = true;
+//							mutant = set_mutant(species[i]);
+//							//System.out.println(mutant);
+//						}
+//					}
+//				}
+//			}
+
+			//次世代種の作成
 			int mutant_existance =check_existance(mutant,n,species);
 			int child_existance =check_existance(child,n,species);
 			if(mutant_existance>0&&child_existance>0){
@@ -163,6 +175,14 @@ public class a_linear_equation {
 				}
 			}
 			times++;
+
+			System.out.print(times+"回目");
+			//一回のstepが終了した段階で次世代の種とその個体数を表示させる
+			for(int i=0;i<n;i++){
+				if(number[i]>0){
+					System.out.println("\t"+species[i]+"\t"+number[i]);
+				}
+			}
 		}
 
 		//最も誤差が小さいものを言う。
