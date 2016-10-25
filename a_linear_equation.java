@@ -15,7 +15,7 @@ public class a_linear_equation {
 	//突然変種の設定
 	public static String set_mutant(String species){
 		Random random = new Random();
-		int digit = random.nextInt(3);
+		int digit = random.nextInt(3);//何桁目を変異させるかを導出
 		String s = null;
 		switch (digit){
 		case 0:
@@ -40,11 +40,13 @@ public class a_linear_equation {
 			}
 			break;
 		}
+		System.out.println("突然変異種："+s);
 		return s;
 	}
 
 
-	//すでに同じものが存在しているかのチェック
+	//すでに同じものが存在しているかのチェック。
+	//していたらその番号を、していなかったら-1を返す
 	public static int check_existance(String checker,int n, String[] species){
 		int num=-1;
 		for(int i=0;i<n;i++){
@@ -93,11 +95,11 @@ public class a_linear_equation {
 		//number配列に、各要素の個体数、species配列には個体の名前を、それぞれの番号で紐づいたものとして、記録していく。
 		//speciesがnull→種が未誕生
 		//numberが0→種が存在はしていたが、滅びた。
-		String[] species = new String[n];
-		long[] number = new long[n];
-		double[] error = new double[n];
-		double[] fittness = new double[n];
-		double[] fittness_times_number = new double[n];
+		String[] species = new String[n];//種を記録
+		long[] number = new long[n];//個体数を記録
+		double[] error = new double[n];//誤差の二乗を記録
+		double[] fittness = new double[n];//適合度を記録
+		double[] fittness_times_number = new double[n];//適合度×個体数を記録
 
 		//初期設定
 		initialize(species,number,error, fittness,fittness_times_number,n);
@@ -105,7 +107,7 @@ public class a_linear_equation {
 		//出力用記述
 		System.out.println("\t種\t個体数");
 
-		int times = 0;
+		int times = 0;	//何回目の世代交代かを記述
 		loop:while(times<m){
 
 			/*
@@ -133,11 +135,12 @@ public class a_linear_equation {
 			}
 			child = species[max_index].substring(0, 2)+species[next_index].substring(2);
 			mutant = set_mutant(species[last_species]);
+			System.out.println("交配結果："+child);
 
 
 
 			//誤差の二乗の計算と最大値の算出
-			double max = error(Integer.parseInt(species[0],2));
+			double max = error(Integer.parseInt(species[last_species],2));
 			for(int i = 0;i<n;i++){
 				if(number[i]>0){
 					error[i] = error(Integer.parseInt(species[i],2));
@@ -165,6 +168,7 @@ public class a_linear_equation {
 			for(int i = 0;i<n;i++){
 				if(number[i]>0){
 					number[i] = Math.round(98 * fittness_times_number[i]/sum);
+					System.out.println(species[i]+"\t"+number[i]);
 				}
 			}
 
@@ -173,8 +177,6 @@ public class a_linear_equation {
 			//最初の種と二番目の種が交配する。二個目の前2個と1個目の後ろ1個が交配する。
 //			boolean step1 = false;
 //			boolean step2 = false;
-			boolean step3 = false;
-			boolean step4 = false;
 //			String mutant = null;
 //			String child  = null;
 //			for(int i = 0;i<n;i++){
@@ -194,23 +196,52 @@ public class a_linear_equation {
 //			}
 
 			//次世代種の作成
+			boolean step3 = false;//何も登録されてないところに新たな子供と突然変異種を登録するための番号を記録するためのモノ
+			boolean step4 = false;//
 			int mutant_existance =check_existance(mutant,n,species);
 			int child_existance =check_existance(child,n,species);
-			if(mutant_existance>=0){number[mutant_existance] += 1;
+			if(mutant_existance>=0&&child_existance>=0){
+				number[mutant_existance] += 1;
+				number[child_existance] += 1;
 			}else{
-				if(child_existance>=0){number[child_existance] += 1;
-				}else{
+				if(mutant_existance>=0){
+					number[mutant_existance] += 1;
 					for(int i =0;i<n;i++){
 						if(number[i]==-1&&species[i]==null){
-							if(step4 != true){
-								if(step3==true){
-									step4 = true;
+								if(!step3){
+									step3 = true;
 									species[i] = child;
 									number[i] = 1;
-								}else{
-									step3 = true;
-									species[i] = mutant;
-									number[i] = 1;
+								}
+
+						}
+					}
+				}else{
+					if(child_existance>=0){
+						number[child_existance] += 1;
+						for(int i =0;i<n;i++){
+							if(number[i]==-1&&species[i]==null){
+									if(!step3){
+										step3 = true;
+										species[i] = mutant;
+										number[i] = 1;
+									}
+
+							}
+						}
+					}else{
+						for(int i =0;i<n;i++){
+							if(number[i]==-1&&species[i]==null){
+								if(!step4){
+									if(step3){
+										step4 = true;
+										species[i] = child;
+										number[i] = 1;
+									}else{
+										step3 = true;
+										species[i] = mutant;
+										number[i] = 1;
+									}
 								}
 							}
 						}
