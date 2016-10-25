@@ -1,4 +1,5 @@
 package GA;
+import java.util.Random;
 
 public class a_linear_equation {
 
@@ -13,14 +14,35 @@ public class a_linear_equation {
 
 	//突然変種の設定
 	public static String set_mutant(String species){
-		if(species.substring(0,1).equals("1")){
-			String s ="0"+species.substring(1);
-			return s;
-		}else{
-			String s ="1"+species.substring(1);
-			return s;
+		Random random = new Random();
+		int digit = random.nextInt(3);
+		String s = null;
+		switch (digit){
+		case 0:
+			if(species.substring(digit,digit+1).equals("1")){
+				s ="0"+species.substring(1);
+			}else{
+				s ="1"+species.substring(1);
+			}
+			break;
+		case 1:
+			if(species.substring(digit,digit+1).equals("1")){
+				s =species.substring(0,1)+"0"+species.substring(2);
+			}else{
+				s =species.substring(0,1)+"1"+species.substring(2);
+			}
+			break;
+		case 2:
+			if(species.substring(digit).equals("1")){
+				s =species.substring(0,2)+"0";
+			}else{
+				s =species.substring(0,2)+"1";
+			}
+			break;
 		}
+		return s;
 	}
+
 
 	//すでに同じものが存在しているかのチェック
 	public static int check_existance(String checker,int n, String[] species){
@@ -86,6 +108,34 @@ public class a_linear_equation {
 		int times = 0;
 		loop:while(times<m){
 
+			/*
+			 *交叉と突然変異に関して、新ルール適用
+			 *親世代の種の個体の多い順に上から2種が、交叉する
+			 *突然変異種は親世代に存在していた種のうち一番新しいものの遺伝子のうちから、、
+			 *ランダムに選んだ一つをひっくり返す。
+			 */
+			String mutant = null;
+			String child  = null;
+			int max_index = 0;
+			int next_index = 1;
+			int last_species = 0;
+			for(int i=0;i<n;i++){
+				if(species[i]!=null&&number[i]>0){
+					last_species = i;
+					if(number[i]>number[max_index]){
+						max_index=i;
+					}else{
+						if(number[i]>=number[next_index]&&i!=max_index){
+							next_index = i;
+						}
+					}
+				}
+			}
+			child = species[max_index].substring(0, 2)+species[next_index].substring(2);
+			mutant = set_mutant(species[last_species]);
+
+
+
 			//誤差の二乗の計算と最大値の算出
 			double max = error(Integer.parseInt(species[0],2));
 			for(int i = 0;i<n;i++){
@@ -95,7 +145,7 @@ public class a_linear_equation {
 						System.out.println("最適種は、"+species[i]+"です。");
 						break loop;
 					}
-					if(max<error[i]){
+					if(max<=error[i]){
 						max = error[i];
 					}
 				}
@@ -117,14 +167,6 @@ public class a_linear_equation {
 					number[i] = Math.round(98 * fittness_times_number[i]/sum);
 				}
 			}
-
-
-			//交叉と突然変異に関して、新ルール適用
-			//次世代の種の個体の多い順に上から2種が、交叉する
-			//突然変異種は親世代に存在していた種のうちからランダムで選ばれる
-			String mutant = null;
-			String child  = null;
-
 
 			//交叉と突然変異
 			//最初の種が突然変異する(過去に生じたものへは、遺伝的に記憶されているとして、突然変異しないものとする)
@@ -154,21 +196,22 @@ public class a_linear_equation {
 			//次世代種の作成
 			int mutant_existance =check_existance(mutant,n,species);
 			int child_existance =check_existance(child,n,species);
-			if(mutant_existance>0&&child_existance>0){
-				number[mutant_existance] += 1;
-				number[child_existance] += 1;
+			if(mutant_existance>=0){number[mutant_existance] += 1;
 			}else{
-				for(int i =0;i<n;i++){
-					if(number[i]==-1&&species[i]==null){
-						if(step4 != true){
-							if(step3==true){
-								step4 = true;
-								species[i] = child;
-								number[i] = 1;
-							}else{
-								step3 = true;
-								species[i] = mutant;
-								number[i] = 1;
+				if(child_existance>=0){number[child_existance] += 1;
+				}else{
+					for(int i =0;i<n;i++){
+						if(number[i]==-1&&species[i]==null){
+							if(step4 != true){
+								if(step3==true){
+									step4 = true;
+									species[i] = child;
+									number[i] = 1;
+								}else{
+									step3 = true;
+									species[i] = mutant;
+									number[i] = 1;
+								}
 							}
 						}
 					}
@@ -176,7 +219,7 @@ public class a_linear_equation {
 			}
 			times++;
 
-			System.out.print(times+"回目");
+			System.out.println(times+"回目");
 			//一回のstepが終了した段階で次世代の種とその個体数を表示させる
 			for(int i=0;i<n;i++){
 				if(number[i]>0){
